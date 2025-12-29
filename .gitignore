@@ -1,0 +1,27 @@
+# Byte-code files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.Python
+build/
+dist/
+
+# Virtual environment
+# Ignore the virtual environment directory itself
+venv/
+env/
+.venv/
+.env/
+
+# IDE specific files (VS Code, PyCharm, etc.)
+.idea/
+.vscode/
+*.swp
+*.bak
+*.tmp
+
+# Installer logs
+pip-log.txt
+pip-delete-this-line.txt
