@@ -3,6 +3,8 @@
 from pymodbus.client import ModbusSerialClient
 from pymodbus import FramerType
 
+controller_device_id=1
+
 def check_negative_temperature(temperature):
     if temperature & 0x8000:
         return (temperature & 0x7FFF) * -0.1
@@ -10,8 +12,16 @@ def check_negative_temperature(temperature):
         return (temperature & 0x7FFF) * 0.1
 
 def read_all_registers(client):
+    print(f"{'   | DO: HEATER | DO:  FAN   | DI: REED | AI: OUTDOOR | AI: INDOOR  | AO: FWVER'}")
+    print("-"*79)
+    print(f"{'00 |     ON     |     ON     |   OPEN   |     28.5 °C |    28.5 °C  |     v0.1 '}")
+    print(f"{'   |            |            |          |     36.0 %  |    36.0 %   |     v0.1 '}")
+    print(f"{'01 |     OFF    |     OFF    |   CLOSE  |     28.5 °C |    28.5 °C  |     v0.1 '}")
+    print(f"{'   |            |            |          |     36.0 %  |    36.0 %   |     v0.1 '}")
+    print()
+
     print("== DIGITAL OUTPUTS ==")
-    res = client.read_coils(address=0, count=2, device_id=1)
+    res = client.read_coils(address=0, count=2, device_id=controller_device_id)
     if res.bits[0]:
         print("Relay Heater ON")
     else:
@@ -26,22 +36,22 @@ def read_all_registers(client):
     print()
 
     print("== ANALOG INPUTS ==")
-    res = client.read_input_registers(address=0, count=1, device_id=1)
+    res = client.read_input_registers(address=0, count=1, device_id=controller_device_id)
     if res.registers[0] == 0xFFFF:
         print("Temperature Outdoor Error!")
     else:
         print("Temperature Outdoor: {} °C".format(round(check_negative_temperature(res.registers[0]), 1)))
-    res = client.read_input_registers(address=1, count=1, device_id=1)
+    res = client.read_input_registers(address=1, count=1, device_id=controller_device_id)
     if res.registers[0] == 0xFFFF:
         print("Temperature Indoor Error!")
     else:
         print("Temperature Indoor: {} °C".format(round(check_negative_temperature(res.registers[0]), 1)))
-    res = client.read_input_registers(address=400, count=1, device_id=1)
+    res = client.read_input_registers(address=400, count=1, device_id=controller_device_id)
     if res.registers[0] == 0xFFFF:
         print("Humidity Outdoor Error!")
     else:
         print("Humidity Outdoor:    {} %".format(res.registers[0] / 10))
-    res = client.read_input_registers(address=401, count=1, device_id=1)
+    res = client.read_input_registers(address=401, count=1, device_id=controller_device_id)
     if res.registers[0] == 0xFFFF:
         print("Humidity Indoor Error!")
     else:
@@ -49,9 +59,9 @@ def read_all_registers(client):
     print()
 
     print("== ANALOG OUTPUTS (controller information) ==")
-    res = client.read_holding_registers(address=0, count=1, device_id=1)
+    res = client.read_holding_registers(address=0, count=1, device_id=controller_device_id)
     print("Device address: {}".format(res.registers[0]))
-    res = client.read_holding_registers(address=2006, count=2, device_id=1)
+    res = client.read_holding_registers(address=2006, count=2, device_id=controller_device_id)
     print("Firmware Version: {}{}{}{}".format(
         chr((res.registers[0] >> 8) & 0xFF),
         chr(res.registers[0] & 0xFF),
@@ -60,8 +70,8 @@ def read_all_registers(client):
     ))
 
 def toggle_coil(client, coil_number):
-    res = client.read_coils(address=0, count=2, device_id=1)
-    res = client.write_coil(address=coil_number, value=(not res.bits[coil_number]), device_id=1)
+    res = client.read_coils(address=0, count=2, device_id=controller_device_id)
+    res = client.write_coil(address=coil_number, value=(not res.bits[coil_number]), device_id=controller_device_id)
 
 def main():
     client = ModbusSerialClient('/dev/ttyUSB0', baudrate=115200, parity='N', stopbits=1, bytesize=8, framer=FramerType.RTU)
